@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Color Extractor</title>
+<style>
+  #image-preview {
+    max-width: 300px;
+    max-height: 300px;
+  }
+</style>
+</head>
+<body>
+  <h1>Image Color Extractor</h1>
+  <input type="file" id="image-input" accept="image/*">
+  <div id="image-preview"></div>
+  <div id="color-codes"></div>
+
+  <script>
+    document.getElementById('image-input').addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      var reader = new FileReader();
+
+      reader.onload = function(event) {
+        var img = new Image();
+        img.onload = function() {
+          var canvas = document.createElement('canvas');
+          var ctx = canvas.getContext('2d');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0, img.width, img.height);
+
+          var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+          var hexCodes = getHexCodes(imageData);
+          displayColors(hexCodes);
+        };
+        img.src = event.target.result;
+        document.getElementById('image-preview').appendChild(img);
+      };
+
+      reader.readAsDataURL(file);
+    });
+
+    function getHexCodes(imageData) {
+      var hexCodes = {};
+      for (var i = 0; i < imageData.length; i += 4) {
+        var r = imageData[i];
+        var g = imageData[i + 1];
+        var b = imageData[i + 2];
+        var hex = rgbToHex(r, g, b);
+        if (!hexCodes[hex]) {
+          hexCodes[hex] = 1;
+        } else {
+          hexCodes[hex]++;
+        }
+      }
+      return hexCodes;
+    }
+
+    function rgbToHex(r, g, b) {
+      return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+
+    function displayColors(hexCodes) {
+      var colorDiv = document.getElementById('color-codes');
+      colorDiv.innerHTML = '<h3>Color Codes:</h3>';
+      for (var hex in hexCodes) {
+        colorDiv.innerHTML += '<div style="background-color:' + hex + ';">' + hex + ' (' + hexCodes[hex] + ' pixels)</div>';
+      }
+    }
+  </script>
+</body>
+</html>
